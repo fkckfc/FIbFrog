@@ -9,7 +9,7 @@ namespace FibFrogProject
         static void Main(string[] args)
         {
             SolutionOriginal sol = new SolutionOriginal();
-            //SolutionJava sol = new SolutionJava();
+            //SolutionBreadthFirstSearch sol = new SolutionBreadthFirstSearch();
             int[] arg = GetRandomOne(100000); //{ 1, 1, 0, 0, 0 };
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -154,45 +154,16 @@ namespace FibFrogProject
     #endregion    
 
     #region Java
-    class SolutionJava
+    class SolutionBreadthFirstSearch
     {
-
-        class Jump
+	internal class Jump
         {
             public int position;
-            public int counter;
-            public Jump(int position, int counter)
+            public int numOfJumps;
+            public Jump(int pos, int num)
             {
-                this.position = position;
-                this.counter = counter;
-            }
-        }
-
-        public int solution(int[] A) 
-        {
-            List<int> fibs = getFibonaci(A.Length);
-            bool[] accessed = new bool[A.Length]; 
-            List<Jump> jumps = new List<Jump>();
-            jumps.Add(new Jump(-1, 0));
-            Jump cj = null;
-            int step = 0;
-            while(true) {
-                if(step==jumps.Count) {
-                    return -1;
-                }
-                cj = jumps[step];
-                step++;
-                foreach (int f in fibs)
-	            {
-                    if(cj.position+f==A.Length) {
-                        return cj.counter+1;
-                    } else if(cj.position+f>A.Length || A[cj.position+f]==0 || accessed[cj.position+f]) {
-                        continue;
-                    }
-                    
-                    jumps.Add(new Jump(cj.position+f, cj.counter+1));
-                    accessed[cj.position+f] = true;
-	            }
+                this.position = pos;
+                this.numOfJumps = num;
             }
         }
 
@@ -204,13 +175,42 @@ namespace FibFrogProject
             int f = 1;
             while (fibs[f] <= max)
             {
-                fibs.Add(fibs[f] + fibs[f-1]);
+                fibs.Add(fibs[f] + fibs[f - 1]);
                 f++;
             }
             fibs.Remove(0);
             fibs.Reverse();
             return fibs;
         }
+	    
+        public int solution(int[] A) 
+        {
+           List<int> fibs = getFibonaci(A.Length);
+
+            bool[] accessed = new bool[A.Length];
+            Queue<Jump> queue = new Queue<Jump>();
+            queue.Enqueue(new Jump(-1, 0));
+            while (queue.Count > 0)
+            {
+                Jump currentAttempt = queue.Dequeue();
+                int numOfJumps = currentAttempt.numOfJumps + 1;
+
+                foreach (int jumpLength in fibs)
+                {
+                    int nextPosition = currentAttempt.position + jumpLength;
+                    if (nextPosition == A.Length) //reached
+                    {
+                        return numOfJumps;
+                    }
+                    else if (nextPosition > A.Length || A[nextPosition] == 0 || accessed[nextPosition]) continue;
+
+                    queue.Enqueue(new Jump(nextPosition, numOfJumps));
+                    accessed[nextPosition] = true;
+                }
+            }
+
+            return -1;
+        }        
     }
     #endregion
 }
